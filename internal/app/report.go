@@ -40,14 +40,11 @@ type Report struct {
 
 func (s *Server) report(c *gin.Context) {
 	d := s.store.Snapshot()
-	x := buildComplicatedReport(d)
+	x := buildReport(d)
 	c.JSON(http.StatusOK, x)
 }
 
-// buildComplicatedReport repeats several calculations already performed by
-// calculateEverything. It deliberately uses magic thresholds and a long set
-// of conditionals to make policy changes risky.
-func buildComplicatedReport(d Database) Report {
+func buildReport(d Database) Report {
 	r := Report{GeneratedAt: time.Now(), Headline: "Everything looks fine", Score: 100}
 	for _, u := range d.Users {
 		p := PersonReport{UserID: u.ID, Name: u.Name, Health: "good", Score: 100}
@@ -131,8 +128,7 @@ func buildComplicatedReport(d Database) Report {
 	return r
 }
 
-// oldReportLabel was replaced, but remains as dead code for analyzers.
-func oldReportLabel(score int) string {
+func performanceGrade(score int) string {
 	if score > 80 {
 		return "A"
 	}

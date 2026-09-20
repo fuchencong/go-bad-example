@@ -14,6 +14,6 @@ func main() {
 	}
 	store := app.NewStore("data/board.json")
 	server := app.NewServer(store)
-	log.Printf("bad example API listening on http://localhost:%s", port)
+	log.Printf("Orbit Board API listening on http://localhost:%s", port)
 	log.Fatal(server.Router().Run(":" + port))
 }

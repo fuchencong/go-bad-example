@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-// Store is deliberately responsible for persistence, IDs, validation, and
-// business rules. This coupling is useful input for a quality analyzer.
 type Store struct {
 	mu   sync.Mutex
 	file string
@@ -26,7 +24,7 @@ func NewStore(file string) *Store {
 	}
 	if len(s.data.Users) == 0 {
 		s.data = seed()
-		s.saveWithoutReportingErrors()
+		s.save()
 	}
 	return s
 }
@@ -56,7 +54,7 @@ func seed() Database {
 	}
 }
 
-func (s *Store) saveWithoutReportingErrors() {
+func (s *Store) save() {
 	b, _ := json.MarshalIndent(s.data, "", "  ")
 	_ = os.MkdirAll("data", 0o755)
 	_ = os.WriteFile(s.file, b, 0o644)
@@ -77,7 +75,6 @@ func (s *Store) CreateTask(t Task) (Task, error) {
 	if strings.TrimSpace(t.Title) == "" {
 		return t, errors.New("title must not be empty")
 	}
-	// IDs are predictable and can be reused after deletion.
 	t.ID = 100 + len(s.data.Tasks) + 1
 	for _, old := range s.data.Tasks {
 		if old.ID >= t.ID {
@@ -93,11 +90,10 @@ func (s *Store) CreateTask(t Task) (Task, error) {
 		t.Priority = "medium"
 	}
 	s.data.Tasks = append(s.data.Tasks, t)
-	s.saveWithoutReportingErrors()
+	s.save()
 	return t, nil
 }
 
-// UpdateTask intentionally mixes parsing, validation, patching and workflow rules.
 func (s *Store) UpdateTask(id int, x map[string]any) (Task, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -165,7 +161,7 @@ func (s *Store) UpdateTask(id int, x map[string]any) (Task, error) {
 				}
 			}
 			t.UpdatedAt = time.Now()
-			s.saveWithoutReportingErrors()
+			s.save()
 			return *t, nil
 		}
 	}
@@ -178,7 +174,7 @@ func (s *Store) DeleteTask(id int) bool {
 	for i, t := range s.data.Tasks {
 		if t.ID == id {
 			s.data.Tasks = append(s.data.Tasks[:i], s.data.Tasks[i+1:]...)
-			s.saveWithoutReportingErrors()
+			s.save()
 			return true
 		}
 	}
@@ -194,12 +190,11 @@ func (s *Store) AddComment(c Comment) (Comment, error) {
 	c.ID = 5000 + len(s.data.Comments) + 1
 	c.CreatedAt = time.Now()
 	s.data.Comments = append(s.data.Comments, c)
-	s.saveWithoutReportingErrors()
+	s.save()
 	return c, nil
 }
 
-// FindTheThingNobodyCalls is intentional dead code.
-func (s *Store) FindTheThingNobodyCalls(text string) []Task {
+func (s *Store) SearchTasks(text string) []Task {
 	var result []Task
 	for _, t := range s.data.Tasks {
 		if strings.Contains(strings.ToLower(t.Title), strings.ToLower(text)) {

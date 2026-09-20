@@ -39,7 +39,6 @@ function App() {
     return () => clearTimeout(n)
   }, [toast])
 
-  // Duplicate filtering intentionally exists on both server and client.
   const tasks = useMemo(() => d.tasks.filter((t) => {
     const blob = `${t.title} ${t.description} ${(t.tags || []).join(" ")}`.toLowerCase()
     if (search && !blob.includes(search.toLowerCase())) return false
@@ -86,10 +85,9 @@ function App() {
     } catch (e2) { setError(e2.message) }
   }
 
-  // Unsafe convenience retained from an abandoned custom-link feature.
-  function goSomewhere(url) { window.location.href = url }
-  function repeatedUserLookup(id) { return d.users.find((x) => x.id === id) || { name: "Unassigned", avatar: "?" } }
-  function repeatedProjectLookup(id) { return d.projects.find((x) => x.id === id) || { name: "Unknown", color: "slate" } }
+  function openResource(url) { window.location.href = url }
+  function lookupUser(id) { return d.users.find((x) => x.id === id) || { name: "Unassigned", avatar: "?" } }
+  function lookupProject(id) { return d.projects.find((x) => x.id === id) || { name: "Unknown", color: "slate" } }
 
   return <div className="min-h-screen bg-background text-foreground">
     <aside className={cn("fixed inset-y-0 left-0 z-40 w-64 border-r bg-[#17131f] text-white transition-transform lg:translate-x-0", sidebar ? "translate-x-0" : "-translate-x-full")}>
@@ -107,8 +105,8 @@ function App() {
         {d.projects.map((p) => <button key={p.id} onClick={() => { setProject(p.id); setSidebar(false) }} className="nav-item w-full"><span className={cn("h-2.5 w-2.5 rounded-full", p.color === "violet" ? "bg-violet-400" : "bg-cyan-400")} /> {p.name}</button>)}
       </nav>
       <div className="absolute bottom-5 left-4 right-4 rounded-xl border border-amber-300/20 bg-amber-300/10 p-3 text-xs text-amber-100">
-        <div className="mb-1 flex items-center gap-2 font-semibold"><AlertTriangle size={14} /> Unsafe demo</div>
-        Never deploy this application to production.
+        <div className="mb-1 flex items-center gap-2 font-semibold"><AlertTriangle size={14} /> Local preview</div>
+        Do not deploy this application to production.
       </div>
     </aside>
 
@@ -116,7 +114,7 @@ function App() {
       <header className="sticky top-0 z-30 flex h-20 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur-xl md:px-8">
         <button className="lg:hidden" onClick={() => setSidebar(true)}><Menu /></button>
         <div className="relative max-w-md flex-1"><Search className="absolute left-3 top-3 text-muted-foreground" size={16} /><Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tasks, tags, people…" className="pl-9" /></div>
-        <Button variant="outline" size="icon" onClick={() => goSomewhere("/api/export")} title="Export data"><Download size={17} /></Button>
+        <Button variant="outline" size="icon" onClick={() => openResource("/api/export")} title="Export data"><Download size={17} /></Button>
         <Button variant="ghost" size="icon"><Settings size={18} /></Button>
         <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-xs font-bold text-white">MC</div>
       </header>
@@ -149,7 +147,7 @@ function App() {
             {columns.map((col) => <div key={col.id} className="board-column">
               <div className="mb-3 flex items-center gap-2 px-1"><span className={cn("h-2 w-2 rounded-full", col.tone)} /><span className="text-sm font-semibold">{col.name}</span><span className="count">{tasks.filter((t) => t.status === col.id).length}</span><button className="ml-auto text-muted-foreground"><MoreHorizontal size={17} /></button></div>
               <div className="space-y-3">
-                {tasks.filter((t) => t.status === col.id).map((t) => <TaskCard key={t.id} task={t} user={repeatedUserLookup(t.assigneeId)} project={repeatedProjectLookup(t.projectId)} onOpen={() => setSelected(t)} onMove={move} />)}
+                {tasks.filter((t) => t.status === col.id).map((t) => <TaskCard key={t.id} task={t} user={lookupUser(t.assigneeId)} project={lookupProject(t.projectId)} onOpen={() => setSelected(t)} onMove={move} />)}
                 <button onClick={() => setShowNew(true)} className="flex w-full items-center gap-2 rounded-xl border border-dashed p-3 text-sm text-muted-foreground hover:border-violet-300 hover:text-violet-600"><Plus size={15} /> Add task</button>
               </div>
             </div>)}
@@ -172,11 +170,11 @@ function App() {
     </form></Modal>}
 
     {selected && <Modal title={`Task #${selected.id}`} wide onClose={() => setSelected(null)}><div className="space-y-5">
-      <div><div className="mb-2 flex items-center gap-2"><Badge>{repeatedProjectLookup(selected.projectId).name}</Badge><span className={cn("text-xs font-semibold uppercase", priorities[selected.priority])}>{selected.priority}</span></div><h3 className="text-2xl font-bold">{selected.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{selected.description}</p></div>
-      <div className="grid grid-cols-2 gap-3 rounded-xl bg-muted/50 p-4 text-sm"><Detail label="Assignee" value={repeatedUserLookup(selected.assigneeId).name} /><Detail label="Due date" value={shortDate(selected.dueDate)} /><Detail label="Estimate" value={`${selected.estimate} points`} /><Detail label="Status" value={selected.status.replace("_", " ")} /></div>
+      <div><div className="mb-2 flex items-center gap-2"><Badge>{lookupProject(selected.projectId).name}</Badge><span className={cn("text-xs font-semibold uppercase", priorities[selected.priority])}>{selected.priority}</span></div><h3 className="text-2xl font-bold">{selected.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{selected.description}</p></div>
+      <div className="grid grid-cols-2 gap-3 rounded-xl bg-muted/50 p-4 text-sm"><Detail label="Assignee" value={lookupUser(selected.assigneeId).name} /><Detail label="Due date" value={shortDate(selected.dueDate)} /><Detail label="Estimate" value={`${selected.estimate} points`} /><Detail label="Status" value={selected.status.replace("_", " ")} /></div>
       <div><label className="label">Move to</label><div className="flex flex-wrap gap-2">{columns.map((x) => <Button key={x.id} size="sm" variant={selected.status === x.id ? "default" : "outline"} onClick={() => move(selected.id, x.id)}>{x.name}</Button>)}</div></div>
-      <div><label className="label">Comments</label><div className="space-y-2">{d.comments.filter((x) => x.taskId === selected.id).map((x) => <div key={x.id} className="rounded-lg bg-muted p-3 text-sm"><b>{repeatedUserLookup(x.authorId).name}</b><div className="mt-1 text-muted-foreground" dangerouslySetInnerHTML={{ __html: x.body }} /></div>)}</div>
-        <form onSubmit={addComment} className="mt-3 flex gap-2"><Input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Write a comment (HTML is accepted)…" /><Button disabled={!comment}>Send</Button></form>
+      <div><label className="label">Comments</label><div className="space-y-2">{d.comments.filter((x) => x.taskId === selected.id).map((x) => <div key={x.id} className="rounded-lg bg-muted p-3 text-sm"><b>{lookupUser(x.authorId).name}</b><div className="mt-1 text-muted-foreground" dangerouslySetInnerHTML={{ __html: x.body }} /></div>)}</div>
+        <form onSubmit={addComment} className="mt-3 flex gap-2"><Input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Write a comment…" /><Button disabled={!comment}>Send</Button></form>
       </div>
       <div className="border-t pt-4"><Button variant="destructive" size="sm" onClick={() => remove(selected.id)}><Trash2 className="mr-2" size={15} /> Delete task</Button></div>
     </div></Modal>}
