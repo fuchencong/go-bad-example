@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 270 25% 98%;
+    --foreground: 264 22% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 264 22% 14%;
+    --primary: 263 72% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 268 28% 94%;
+    --secondary-foreground: 263 40% 28%;
+    --muted: 264 20% 95%;
+    --muted-foreground: 262 10% 46%;
+    --accent: 265 30% 94%;
+    --accent-foreground: 263 60% 42%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 264 20% 89%;
+    --input: 264 18% 86%;
+    --ring: 263 72% 56%;
+    --radius: .8rem;
+  }
+  * { @apply border-border; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "DM Sans", sans-serif;
+    background-image: radial-gradient(circle at 88% 4%, rgba(139,92,246,.09), transparent 22%), radial-gradient(circle at 35% 100%, rgba(34,211,238,.05), transparent 30%);
+  }
+  h1, h2, h3 { font-family: "Manrope", "DM Sans", sans-serif; }
+  button, a, select { -webkit-tap-highlight-color: transparent; }
+}
+
+@layer components {
+  .nav-item, .nav-active {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition;
+  }
+  .nav-item { @apply text-white/55 hover:bg-white/5 hover:text-white; }
+  .nav-active { @apply bg-violet-500/20 font-medium text-violet-200; }
+  .board-column { @apply min-h-[400px] rounded-2xl border border-white/80 bg-white/35 p-3; }
+  .count { @apply grid h-5 min-w-5 place-items-center rounded-full bg-muted px-1 text-[10px] font-semibold text-muted-foreground; }
+  .select { @apply h-10 rounded-lg border border-input bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring; }
+  .textarea { @apply min-h-24 w-full resize-y rounded-lg border border-input bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-ring; }
+  .label { @apply mb-1.5 block text-xs font-semibold text-foreground; }
+}
+
+@media (max-width: 640px) {
+  .board-column { min-height: auto; }
+}
